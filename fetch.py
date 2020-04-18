@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-import os, sys, re, urlparse, urllib2, ConfigParser
+import os, sys, locale, re, urlparse, urllib2, ConfigParser
 
 root_config_file = '.conf'
 txt_config_file = '.conf'
@@ -92,15 +92,6 @@ class TxtConfig:
 	def OK(self):
 		return hasattr(self, 'summary') and hasattr(self, 'content')
 
-def GetTxtDir(data_dir):
-	dirs = []
-	for dir in os.listdir(data_dir):
-		dir_path = os.path.join(data_dir, dir)
-		if not os.path.isdir(dir_path):
-			continue
-		dirs.append(dir_path)
-	return dirs
-
 def FetchUrlAndTrim(url, charset, prefix, suffix):
 	html = urllib2.urlopen(url).read()
 	html = html.decode(charset, errors='ignore')
@@ -136,10 +127,10 @@ def FetchContent(txt_path, url, config):
 	with open(txt_path, 'w') as f:
 		f.write(txt.encode('utf-8'))
 
-def Fetch(txt_dir):
+def FetchTxt(txt_dir):
 	c = TxtConfig(txt_dir)
 	if not c.OK():
-		return
+		return False
 	print 'Fetching %s ...' % txt_dir
 	count = 0
 	for (name, url) in FetchSummary(c.summary):
@@ -151,17 +142,23 @@ def Fetch(txt_dir):
 			FetchContent(txt_path, url, c.content)
 			if c.content.debug:
 				break
+	return True
 
-def FetchAll(dirs):
-	for dir in dirs:
-		for dir_path in GetTxtDir(dir):
-			Fetch(dir_path)
+def FetchAll(dir):
+	for sub_dir in os.listdir(dir):
+		sub_path = os.path.join(dir, sub_dir)
+		if not os.path.isdir(sub_path):
+			continue
+		if not FetchTxt(sub_path):
+			FetchAll(sub_path)
 
 def main(argv):
 	dirs = set(argv)
 	if len(dirs) == 0:
 		dirs.add('.')
-	FetchAll(dirs)
+	for dir in dirs:
+		udir = dir.decode(locale.getdefaultlocale()[1])
+		FetchAll(udir)
 
 if __name__ == '__main__':
 	main(sys.argv[1:])
