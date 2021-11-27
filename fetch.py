@@ -46,6 +46,8 @@ class RootConfig:
 class TxtConfig:
 	class SummaryConfig:
 		url = None
+		urlBegin = 0
+		urlEnd = 1
 		charset = 'utf-8'
 		prefix = None
 		suffix = None
@@ -68,6 +70,8 @@ class TxtConfig:
 
 		if ConfigToVar(summary, conf_file, [
 			ConfigVarMap(attr='url', section='summary', option='url', default=TxtConfig.SummaryConfig.url),
+			ConfigVarMap(attr='urlBegin', section='summary', option='urlBegin', default=TxtConfig.SummaryConfig.urlBegin),
+			ConfigVarMap(attr='urlEnd', section='summary', option='urlEnd', default=TxtConfig.SummaryConfig.urlEnd),
 			ConfigVarMap(attr='charset', section='summary', option='charset', default=TxtConfig.SummaryConfig.charset),
 			ConfigVarMap(attr='prefix', section='summary', option='prefix', default=TxtConfig.SummaryConfig.prefix),
 			ConfigVarMap(attr='suffix', section='summary', option='suffix', default=TxtConfig.SummaryConfig.suffix),
@@ -105,14 +109,16 @@ def FetchUrlAndTrim(url, charset, prefix, suffix):
 	return html[start:end]
 
 def FetchSummary(config):
-	content = FetchUrlAndTrim(config.url, config.charset, config.prefix, config.suffix)
 	r = []
-	for m in config.pattern.finditer(content):
-		g = m.groupdict()
-		url = urlparse.urljoin(config.url, g['URL'])
-		name = g['NAME']
-		r.append((name, url))
-	return r
+	for i in range(config.urlBegin, config.urlEnd):
+		url = config.url.relpace('{COUNTER}', str(i))
+		content = FetchUrlAndTrim(url, config.charset, config.prefix, config.suffix)
+		for m in config.pattern.finditer(content):
+			g = m.groupdict()
+			url = urlparse.urljoin(config.url, g['URL'])
+			name = g['NAME']
+			r.append((name, url))
+		return r
 
 def htmlTrans(html):
 	html.replace('<br>', '\n')
