@@ -118,7 +118,7 @@ def FetchSummary(config):
 			url = urlparse.urljoin(config.url, g['URL'])
 			name = g['NAME']
 			r.append((name, url))
-		return r
+	return r
 
 def htmlTrans(html):
 	html.replace('<br>', '\n')
