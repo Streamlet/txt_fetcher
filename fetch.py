@@ -111,7 +111,7 @@ def FetchUrlAndTrim(url, charset, prefix, suffix):
 def FetchSummary(config):
 	r = []
 	for i in range(config.urlBegin, config.urlEnd):
-		url = config.url.relpace('{COUNTER}', str(i))
+		url = config.url.replace('{COUNTER}', str(i))
 		content = FetchUrlAndTrim(url, config.charset, config.prefix, config.suffix)
 		for m in config.pattern.finditer(content):
 			g = m.groupdict()
