@@ -97,7 +97,12 @@ class TxtConfig:
 		return hasattr(self, 'summary') and hasattr(self, 'content')
 
 def FetchUrlAndTrim(url, charset, prefix, suffix):
-	html = urllib2.urlopen(url).read()
+	print url
+	headers = {
+		'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36'
+	}
+	request = urllib2.Request(url, None, headers)
+	html = urllib2.urlopen(request).read()
 	html = html.decode(charset, errors='ignore')
 	start = html.find(prefix)
 	if start < 0:
@@ -142,21 +147,24 @@ def FetchTxt(txt_dir):
 	for (name, url) in FetchSummary(c.summary):
 		count += 1
 		filename = c.summary.filename.replace('{COUNTER}', str(count).zfill(c.summary.counterLength)).replace('{NAME}', name)
+		print filename,
 		txt_path = os.path.join(txt_dir, filename)
-		if not os.path.exists(txt_path):
-			print filename, url
+		if os.path.exists(txt_path):
+			print 'skipped'
+		else:
 			FetchContent(txt_path, url, c.content)
 			if c.content.debug:
 				break
 	return True
 
 def FetchAll(dir):
+	if FetchTxt(dir):
+		return
 	for sub_dir in os.listdir(dir):
 		sub_path = os.path.join(dir, sub_dir)
 		if not os.path.isdir(sub_path):
 			continue
-		if not FetchTxt(sub_path):
-			FetchAll(sub_path)
+		FetchAll(sub_path)
 
 def main(argv):
 	dirs = set(argv)
